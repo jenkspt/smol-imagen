@@ -95,10 +95,11 @@ def test_UNetModel(getkey):
 
 def test_ImagenCLIP64(getkey):
     model = ImagenCLIP64(64, num_heads=2)
-    x = jax.random.uniform(getkey(), (1, 64, 64, 3), minval=-1, maxval=1)
-    t = jax.random.uniform(getkey(), (1,))
-    cond = jax.random.normal(getkey(), (1, 768))
-    cond_sequence = jax.random.normal(getkey(), (1, 77, 768))
-    y = init_apply(getkey(), model, x, t, cond, cond_sequence)
+    params = model.init(getkey())
+    padding = (jax.random.uniform(getkey(), (2, 77,)) > .5).astype(jnp.int32).sort()[::-1]
+    x = jax.random.uniform(getkey(), (2, 64, 64, 3), minval=-1, maxval=1)
+    t = jax.random.uniform(getkey(), (2,))
+    cond_sequence = jax.random.normal(getkey(), (2, 77, 768))
+    y = model.apply(params, x, t, cond_sequence, padding)
     assert x.shape == y.shape
     assert jnp.allclose(y, jnp.zeros_like(x))
