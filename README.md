@@ -19,7 +19,11 @@ model = ImagenCLIP64()
 
 ```
 
+## Acknowledgements
+* Google [TPU Research Cloud (TRC program)](https://sites.research.google/trc/) for providing TPUs for training.
 
+
+## Citations
 ```bibtex
 @misc{https://doi.org/10.48550/arxiv.2205.11487,
   doi = {10.48550/ARXIV.2205.11487},
