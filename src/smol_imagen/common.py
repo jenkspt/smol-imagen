@@ -77,10 +77,12 @@ class AttentionBlock(nn.Module):
 
             if padding is not None: 
                 kv_t = padding.shape[-1]
-                mask = jnp.zeros((b, 1, t, t), dtype=bool)
+                # image features are always used so mask t x t matrix of 1's
+                mask = jnp.ones((b, 1, t, t), dtype=bool)
                 padding = jnp.broadcast_to(padding[:, None, None, :], (b, 1, t, kv_t))
                 mask = jnp.concatenate([mask, padding.astype(bool)], -1)    # --> [b, 1, q_t, q_t + kv_t]
 
+        # attention weights are masked out if their mask value is `False`
         h = self.attention_fn(q, k, v, mask=mask)
         h = h.reshape(x.shape)
         h = nn.Dense(c, name='project_out', kernel_init=nn.initializers.zeros)(h)

@@ -12,7 +12,7 @@ class ImagenCLIP64(UNetModel):
     # override unet defaults
     out_channels: int = 3
     num_res_blocks: int = 3
-    attention_resolutions: Tuple[int, ...] = (32, 16, 8)
+    attention_resolutions: Tuple[int, ...] = (2, 4, 8)
     deterministic: Optional[bool] = True
     channel_mult: Tuple[int, ...] = (1, 2, 3, 4)
     num_heads: int = 8
