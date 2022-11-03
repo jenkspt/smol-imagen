@@ -177,7 +177,6 @@ class UNetModel(nn.Module):
 
         for level, mult in list(enumerate(self.channel_mult))[::-1]:
             channels = mult * self.model_channels
-            #import pdb; pdb.set_trace()
             for i in range(self.num_res_blocks + 1):
                 h = jnp.concatenate([h, hs.pop()], -1)
                 h = _ResBlock(channels)(h, cond)
