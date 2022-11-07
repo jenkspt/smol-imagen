@@ -46,7 +46,7 @@ def attention_fn(q, k, v, mask):
 
 class AttentionBlock(nn.Module):
 
-    num_heads: int
+    num_head_channels: int
     #attention_fn: Callable = nn.attention.dot_product_attention
     attention_fn: Callable = attention_fn
 
@@ -55,22 +55,24 @@ class AttentionBlock(nn.Module):
             cond_sequence=None,          # [B, kv_t, D]
             padding=None,                # [B, kv_t]
         ):
-
         b, *spatial, c = x.shape
         t = prod(spatial)
-        assert c % self.num_heads == 0
+
+        assert c % self.num_head_channels == 0
+        num_heads = c // self.num_head_channels
+
         mask = None
         # normalize image features and project to q, k, v
         h = nn.GroupNorm()(x)
         h = nn.Dense(c*3, name='qkv')(h)
-        qkv = h.reshape(b, t, self.num_heads, c*3 // self.num_heads)
+        qkv = h.reshape(b, t, num_heads, c*3 // num_heads)
         q, k, v = jnp.array_split(qkv, 3, -1)
 
         if cond_sequence is not None:
             # normalize conditioning sequence, project and concatenate to kv
             ctx_kv = nn.LayerNorm()(cond_sequence)  # --> [b, kv_t, C]
             ctx_kv = nn.Dense(c*2, name='context_kv')(ctx_kv)
-            ctx_kv = ctx_kv.reshape(b, -1, self.num_heads, c*2 // self.num_heads)
+            ctx_kv = ctx_kv.reshape(b, -1, num_heads, c*2 // num_heads)
             ctx_k, ctx_v = jnp.array_split(ctx_kv, 2, -1)
             k = jnp.concatenate([k, ctx_k], -3)
             v = jnp.concatenate([v, ctx_v], -3)

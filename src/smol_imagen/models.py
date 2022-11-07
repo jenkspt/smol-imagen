@@ -15,7 +15,7 @@ class ImagenCLIP64(UNetModel):
     attention_resolutions: Tuple[int, ...] = (2, 4, 8)
     deterministic: Optional[bool] = True
     channel_mult: Tuple[int, ...] = (1, 2, 3, 4)
-    num_heads: int = 8
+    num_head_channels: int = 64
     use_scale_shift_norm: bool = True
 
     @nn.compact

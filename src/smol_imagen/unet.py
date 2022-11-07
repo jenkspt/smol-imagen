@@ -137,7 +137,7 @@ class UNetModel(nn.Module):
     deterministic: Optional[bool] = None
     channel_mult: Tuple[int, ...] = (1, 2, 4, 8)
     conv_resample: bool = True
-    num_heads: int = 1
+    num_head_channels: int = 64
     use_scale_shift_norm: bool = False
     resblock_updown: bool = False
 
@@ -159,7 +159,7 @@ class UNetModel(nn.Module):
                 h = _ResBlock(channels)(h, cond)
 
                 if ds in self.attention_resolutions:
-                    h = AttentionBlock(self.num_heads)(h, cond_sequence, padding)
+                    h = AttentionBlock(self.num_head_channels)(h, cond_sequence, padding)
                 hs.append(h)
 
             if level != len(self.channel_mult) - 1:
@@ -172,7 +172,7 @@ class UNetModel(nn.Module):
 
         # middle blocks
         h = _ResBlock(channels)(h, cond)
-        h = AttentionBlock(self.num_heads)(h, cond_sequence, padding)
+        h = AttentionBlock(self.num_head_channels)(h, cond_sequence, padding)
         h = _ResBlock(channels)(h, cond)
 
         for level, mult in list(enumerate(self.channel_mult))[::-1]:
@@ -181,7 +181,7 @@ class UNetModel(nn.Module):
                 h = jnp.concatenate([h, hs.pop()], -1)
                 h = _ResBlock(channels)(h, cond)
                 if ds in self.attention_resolutions:
-                    h = AttentionBlock(self.num_heads)(h, cond_sequence, padding)
+                    h = AttentionBlock(self.num_head_channels)(h, cond_sequence, padding)
 
                 if level and i == self.num_res_blocks:
                     if self.resblock_updown:
