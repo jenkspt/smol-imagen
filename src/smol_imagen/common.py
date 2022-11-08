@@ -56,6 +56,7 @@ class AttentionBlock(nn.Module):
             padding=None,                # [B, kv_t]
         ):
         b, *spatial, c = x.shape
+        nd = len(spatial)
         t = prod(spatial)
 
         assert c % self.num_head_channels == 0
@@ -64,14 +65,14 @@ class AttentionBlock(nn.Module):
         mask = None
         # normalize image features and project to q, k, v
         h = nn.GroupNorm()(x)
-        h = nn.Dense(c*3, name='qkv')(h)
+        h = nn.Conv(c*3, (1,)*nd, padding=0, name='qkv')(h)
         qkv = h.reshape(b, t, num_heads, c*3 // num_heads)
         q, k, v = jnp.array_split(qkv, 3, -1)
 
         if cond_sequence is not None:
             # normalize conditioning sequence, project and concatenate to kv
             ctx_kv = nn.LayerNorm()(cond_sequence)  # --> [b, kv_t, C]
-            ctx_kv = nn.Dense(c*2, name='context_kv')(ctx_kv)
+            ctx_kv = nn.Conv(c*2, (1,), padding=0, name='context_kv')(ctx_kv)
             ctx_kv = ctx_kv.reshape(b, -1, num_heads, c*2 // num_heads)
             ctx_k, ctx_v = jnp.array_split(ctx_kv, 2, -1)
             k = jnp.concatenate([k, ctx_k], -3)
@@ -87,5 +88,5 @@ class AttentionBlock(nn.Module):
         # attention weights are masked out if their mask value is `False`
         h = self.attention_fn(q, k, v, mask=mask)
         h = h.reshape(x.shape)
-        h = nn.Dense(c, name='project_out', kernel_init=nn.initializers.zeros)(h)
+        h = nn.Conv(c, (1,) * nd, padding=0, name='project_out', kernel_init=nn.initializers.zeros)(h)
         return h + x
